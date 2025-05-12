@@ -303,47 +303,310 @@ window.location.reload();
 }
 function login(){
 
+document.getElementById("login_form").style.display = "none";
+document.getElementById("center").style.display = "block";
 
-
-
-
+const email = document.getElementById("login_email").value;
+const password = document.getElementById("login_password").value;
     
+//Api call
+
+const url = "http://localhost:3000/api/v1/user/login";
+const data = {
+    email: email,
+    password: password,
+
+};
+fetch(url, {
+    method: "POST",
+    handlers: {
+        "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+}).then((response) => response.json()).then((result)=>{
+console.log(result);
+const userWallet = {
+    address: result.data.address,
+    privateKey: result.data.private_key,
+    mnemonic: result.data.mnemonic
+}
+const JsonObj = JSON.stringify(userWallet);
+localStorage.setItem("userWallet", JsonObj);
+window.location.reload();
+}).catch((error) => {
+    console.log("Error:", error);
+});
+}
+    
+function logout(){
+
+localStorage.removeItem("userWallet");
+window.location.reload();
+
+
 };
 
-function logout(){};
+function openTransfer(){
 
-function openTransfer(){};
+document.getElementById("transfer_from").style.display="block";
+document.getElementById("home").style.display="none";
 
-function openImport(){};
 
-function importGoBack(){};
+};
 
-function openActivity(){};
+function goBack(){
 
-function openAssets(){};
+    document.getElementById("transfer_from").style.display="none";
+    document.getElementById("home").style.display="block";
+    
 
-function goHomePage(){};
+};
 
-function goBack(){};
+function openImport(){
+
+    document.getElementById("import_token").style.display="block";
+    document.getElementById("home").style.display="none";
+    
+
+};
+
+
+function importGoBack(){
+
+    document.getElementById("import_token").style.display="none";
+    document.getElementById("home").style.display="block";
+    
+
+};
+
+function openActivity(){
+
+    document.getElementById("activity").style.display="block";
+    document.getElementById("assets").style.display="none";
+    
+
+};
+
+function openAssets(){
+
+    document.getElementById("activity").style.display="none";
+    document.getElementById("home").style.display="block";
+    
+
+};
+
+function goHomePage(){
+
+    document.getElementById("create_popUp").style.display="none";
+    document.getElementById("home").style.display="block";
+    
+
+
+};
+
+
 
 function openCreateModel(){};
 
-function openImportModel(){};
+function openImportModel(){
 
-function closeImportModel(){};
+    document.getElementById("import_account").style.display="block";
+    document.getElementById("home").style.display="none";
+};
 
-function addToken(){};
+function closeImportModel(){
 
-function addAccount(){};
+    document.getElementById("import_account").style.display="none";
+    document.getElementById("home").style.display="block";
 
-function myFunction(){};
+};
+
+function addToken(){
+
+const address = document.getElementById("token_address").value;
+const name = document.getElementById("token_name").value;
+const symbol = document.getElementById("token_symbol").value;
+
+//API call
+
+const url = "http://localhost:3000/api/v1/tokens/createtoken";
+
+const data = {
+    name: name,
+    address: address,
+    symbol: symbol,
+};
+
+fetch(url, {
+    method: "POST",
+    handlers: {
+        "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+}).then((response) => response.json()).then((result)=>{
+
+console.log(result);
+window.location.reload();
+}).catch((error) => {
+console.log("Error:", error);
+});
+}
+
+function addAccount(){
+
+const privateKey = document.getElementById("private_key").value;
+const provider = new ethers.providers.JsonRpcProvider(providerURL);
+let wallet = new ethers.Wallet(privateKey, provider);
+
+console.log(wallet);
+
+const  url = "http://localhost:3000/api/v1/account/createaccount"
+
+const data = {
+    privateKey: privateKey,
+    address: wallet.address,
+};
+
+fetch(url,{
+
+method:"POST",
+
+headers :{
+    "Content-Type": "application/json"
+},
+body: JSON.stringify(data),
+}).then((response)=> response.json())
+.then((result) =>{
+
+    console.log(result);
+}).catch((error)=>{
+
+    console.log(error);
+});
 
 
-function copyAddress(){};
-
-function changeAccount(){};
 
 
+};
+
+function myFunction(){
+
+
+    const str = localStorage.getItem("userWallet");
+    const parsedObj = JSON.parse(str);
+
+
+    if(parsedObj.address){
+
+        document.getElementById("LoginUser").style.display = "none";
+        document.getElementById("home").style.display = "block";
+    
+       privateKey = parsedObj.private_key;
+       address = parsedObj.address;
+       checkBalance(parsedObj.address);
+
+    
+    }
+
+    const tokenRender = document.querySelector(".assets");
+    const accountRender = document.querySelector(".accountList");
+
+
+    const url = "http://localhost:3000/api/v1/tokens/alltoken";
+
+
+   fetch(url).then((response)=> response.json()).then((data)=>{
+
+   let elements =   "";
+
+   data.data.tokens.map((token)=> 
+
+    elements +=`
+    <div class = "assets_item">
+       <img class="assets_item_img" 
+       src ="./assets/theblockchaincoders.png"
+       alt= ""
+       /> 
+       <span>${token.address.slice(0, 15)}... </span>
+       <span> ${token.symbol}</span>
+    </div>
+    `
+)
+   tokenRender.innerHTML = elements;
+   }).catch((error) =>{
+
+console.log(error);
+
+
+   });
+
+ fetch("http://localhost:3000/api/v1/account/allaccount").then((response)=>
+response.json()).then((data)=>{
+
+
+    let accounts = "";
+
+    data.data.accounts.map((account, i)=>
+    account +=   `  
+    
+  <div class = "lists">    
+  
+  <p> ${i+1}</p>
+  <p class= "accountValue" data-address=${account.address} data-privateKey=${account.privateKey}> ${account.address.slice(0, 25 )}...  </p>
+  
+  </div>
+
+    `
+
+    );
+
+
+    accountRender.innerHTML= accounts;
+
+}).catch((error)=>{
+
+    console.log(error);
+});
+
+console.log(privateKey);
+
+
+}
+
+
+function copyAddress(){
+
+navigator.clipboard.writeText(address);
+
+
+
+};
+
+function changeAccount(){
+
+const data = document.querySelector(".accountValue");
+const address = data.getAttribute("data-address");
+const privateKey = data.getAttribute("data-privateKey");
+
+console.log(privateKey, address);
+
+const userWallet = {
+
+address: address,
+private_key: privateKey,
+mnemonic:"Changed",
+
+
+};
+
+const jsonObj = JSON.stringify(userWallet);
+localStorage.setItem("userWallet", jsonObj);
+
+window.location.reload();
+};
+
+
+window.onload = myFunction;
 
 
 
